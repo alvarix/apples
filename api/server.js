@@ -45,38 +45,57 @@ fastify.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
 /**
  * GET /api/expenses
  *
- * Retrieves all expense transactions from the database and returns an HTML fragment.
- * Each expense entry includes a formatted date.
+ * Retrieves all expense transactions from the database, groups them by payer,
+ * and returns an HTML fragment with a separate list for each payer including a total at the bottom.
  *
  * @param {FastifyRequest} request - The incoming request.
  * @param {FastifyReply} reply - The reply interface.
- * @returns {Promise<void>} - Sends an HTML fragment containing the expenses list.
+ * @returns {Promise<void>} - Sends an HTML fragment containing the grouped expenses list.
  */
 fastify.get('/api/expenses', async (request, reply) => {
   try {
-    // Query all transactions, ordered by date descending.
+    // Retrieve all transactions ordered by date descending.
     const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
-    
-    // Build an HTML unordered list from the query results.
-    let html = '<ul>';
-    rows.forEach(expense => {
-      // Format the date into a human-readable string.
-      const expenseDate = new Date(expense.date);
-      const formattedDate = expenseDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      // Build list item with formatted date.
-      html += `<li>${expense.description} - $${expense.amount} - ${expense.payer} - ${formattedDate}</li>`;
-    });
-    html += '</ul>';
 
-    // Send the HTML fragment with the appropriate content type.
+    // Group transactions by payer.
+    const groupedExpenses = rows.reduce((acc, expense) => {
+      const payer = expense.payer;
+      if (!acc[payer]) {
+        acc[payer] = [];
+      }
+      acc[payer].push(expense);
+      return acc;
+    }, {});
+
+    // Build HTML for each payer's expense list.
+    let html = '';
+    for (const payer in groupedExpenses) {
+      const expenses = groupedExpenses[payer];
+      // Calculate the total amount for this payer.
+      const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+
+      // Header for the payer.
+      html += `<h2 class="text-xl font-bold mt-4">${payer}</h2>`;
+      html += '<ul class="list-disc ml-6">';
+      // Build each expense item with a formatted date.
+      expenses.forEach(expense => {
+        const expenseDate = new Date(expense.date);
+        const formattedDate = expenseDate.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        html += `<li>${expense.description} - $${expense.amount} - ${formattedDate}</li>`;
+      });
+      html += '</ul>';
+      // Display total for this payer.
+      html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
+    }
+
+    // Send the constructed HTML fragment.
     reply.type('text/html').send(html);
   } catch (err) {
     console.error('Error fetching expenses:', err);
@@ -167,11 +186,10 @@ fastify.post('/api/add-expense', async (request, reply) => {
 
     // Retrieve the updated list of expenses.
     const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
-    let html = '<ul>';
+    let html = '';
     rows.forEach(expense => {
       html += `<li>${expense.description} - ${expense.amount} - ${expense.payer} - ${new Date(expense.date).toLocaleString()}</li>`;
     });
-    html += '</ul>';
     reply.type('text/html').send(html);
   } catch (err) {
     console.error('Error adding expense:', err);
