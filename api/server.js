@@ -18,7 +18,7 @@ pool.connect()
       level: 'warn' // only log warnings and errors (suppress info logs)
     }
   });
-  
+
 fastify.register(formbody);
 import formbody from '@fastify/formbody';
 const PORT = process.env.PORT || 3000;
@@ -41,42 +41,78 @@ fastify.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
 
-fastify.get('/api/expenses', async (_, reply) => {
-  const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
-  reply.send(rows);
-});
+fastify.get('/api/expenses', async (request, reply) => {
+  try {
+    // Query all transactions, ordered by date descending.
+    const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
 
-fastify.get('/api/balance', async (_, reply) => {
-  const { rows } = await pool.query(`
-    SELECT 
-      SUM(CASE WHEN payer = 'Adam' THEN amount ELSE 0 END) AS adam_paid,
-      SUM(CASE WHEN payer = 'Eve' THEN amount ELSE 0 END) AS eve_paid
-    FROM transactions
-  `);
-  const balance = rows[0].adam_paid - rows[0].eve_paid;
-  return reply.type('text/html').send(`<strong>${balance}</strong>`);
-});
+    // Build an HTML unordered list from the query results.
+    let html = '<ul>';
+    rows.forEach(expense => {
+      html += `<li>${expense.description} - ${expense.amount} - ${expense.payer}</li>`;
+    });
+    html += '</ul>';
 
+    // Send the HTML fragment with the appropriate content type.
+    reply.type('text/html').send(html);
+  } catch (err) {
+    console.error('Error fetching expenses:', err);
+    reply.status(500).send('Error fetching expenses');
+  }
+});
 
 /**
- * Route to handle adding a new expense.
+ * GET /api/balance
  *
- * @param {Object} request - Fastify request object containing the form data.
- * @param {Object} reply - Fastify reply object used to send the response.
+ * Calculates the net balance between Adam and Eve and returns an HTML message.
+ * If the balance is positive, Eve owes Adam; if negative, Adam owes Eve; if zero, it's all settled.
+ *
+ * @param {FastifyRequest} request - The incoming request.
+ * @param {FastifyReply} reply - The reply interface.
  * @returns {Promise<void>}
  */
+fastify.get('/api/balance', async (request, reply) => {
+  try {
+    // Query sums for each payer with COALESCE to handle null values.
+    const { rows } = await pool.query(`
+      SELECT 
+        COALESCE(SUM(CASE WHEN payer = 'Adam' THEN amount::numeric ELSE 0 END), 0) AS adam_paid,
+        COALESCE(SUM(CASE WHEN payer = 'Eve' THEN amount::numeric ELSE 0 END), 0) AS eve_paid
+      FROM transactions
+    `);
+    
+    // Parse amounts and compute the balance.
+    const { adam_paid, eve_paid } = rows[0];
+    const balance = parseFloat(adam_paid) - parseFloat(eve_paid);
+    let message = '';
+
+    if (balance > 0) {
+      // Adam paid more so Eve owes Adam.
+      message = `Eve owes Adam $${balance.toFixed(2)}`;
+    } else if (balance < 0) {
+      // Eve paid more so Adam owes Eve.
+      message = `Adam owes Eve $${Math.abs(balance).toFixed(2)}`;
+    } else {
+      message = 'All settled up!';
+    }
+
+    // Return the message as HTML so that htmx can update the UI.
+    reply.type('text/html').send(message);
+  } catch (err) {
+    console.error('Error calculating balance:', err);
+    reply.status(500).send('Error calculating balance');
+  }
+});
+
+
 fastify.post('/api/add-expense', async (request, reply) => {
-  // Destructure form values from the request body
   const { description, amount, payer } = request.body;
 
-  // Basic validation
   if (!description || !amount || !payer) {
     return reply.status(400).send('Missing required fields');
   }
 
   try {
-    // Insert the new expense into the "transactions" table.
-    // Adjust the SQL query according to your actual table schema.
     const insertQuery = `
       INSERT INTO transactions (description, amount, payer, date)
       VALUES ($1, $2, $3, NOW())
@@ -84,23 +120,20 @@ fastify.post('/api/add-expense', async (request, reply) => {
     `;
     await pool.query(insertQuery, [description, amount, payer]);
 
-    // Retrieve updated expenses list
     const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
-
-    // Build a simple HTML snippet for the expenses list.
-    let html = '';
+    let html = '<ul>';
     for (const expense of rows) {
       html += `<li>${expense.description} - ${expense.amount} - ${expense.payer}</li>`;
     }
+    html += '</ul>';
 
-    // Return the updated HTML fragment so htmx can update the expense list.
+    // Return the HTML fragment
     reply.type('text/html').send(html);
   } catch (err) {
     console.error('Error adding expense:', err);
     reply.status(500).send('Error adding expense');
   }
 });
-
 
 export default async (req, res) => {
   await fastify.ready();
