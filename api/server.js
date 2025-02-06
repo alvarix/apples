@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fastifyStatic from '@fastify/static';
+import { archiveOldTransactions } from '../utils/archive.js'; 
+
 
 
 dotenv.config();
@@ -40,16 +42,37 @@ fastify.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
   }
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
-
+/**
+ * GET /api/expenses
+ *
+ * Retrieves all expense transactions from the database and returns an HTML fragment.
+ * Each expense entry includes a formatted date.
+ *
+ * @param {FastifyRequest} request - The incoming request.
+ * @param {FastifyReply} reply - The reply interface.
+ * @returns {Promise<void>} - Sends an HTML fragment containing the expenses list.
+ */
 fastify.get('/api/expenses', async (request, reply) => {
   try {
     // Query all transactions, ordered by date descending.
     const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
-
+    
     // Build an HTML unordered list from the query results.
     let html = '<ul>';
     rows.forEach(expense => {
-      html += `<li>${expense.description} - ${expense.amount} - ${expense.payer}</li>`;
+      // Format the date into a human-readable string.
+      const expenseDate = new Date(expense.date);
+      const formattedDate = expenseDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      // Build list item with formatted date.
+      html += `<li>${expense.description} - $${expense.amount} - ${expense.payer} - ${formattedDate}</li>`;
     });
     html += '</ul>';
 
@@ -60,6 +83,7 @@ fastify.get('/api/expenses', async (request, reply) => {
     reply.status(500).send('Error fetching expenses');
   }
 });
+
 
 /**
  * GET /api/balance
@@ -105,14 +129,31 @@ fastify.get('/api/balance', async (request, reply) => {
 });
 
 
+/**
+ * POST /api/add-expense
+ *
+ * Adds a new expense transaction and triggers archiving if a new month has begun.
+ * If checkboxes are used for "payer" and both are checked, the first value is used.
+ *
+ * @param {FastifyRequest} request - The incoming request containing form data.
+ * @param {FastifyReply} reply - The reply interface.
+ * @returns {Promise<void>}
+ */
 fastify.post('/api/add-expense', async (request, reply) => {
-  const { description, amount, payer } = request.body;
+  const { description, amount } = request.body;
+  let payer = request.body.payer;
+
+  // If "payer" is an array (i.e. both checkboxes are checked), choose the first.
+  if (Array.isArray(payer)) {
+    payer = payer[0];
+  }
 
   if (!description || !amount || !payer) {
     return reply.status(400).send('Missing required fields');
   }
 
   try {
+    // Insert new expense with current timestamp.
     const insertQuery = `
       INSERT INTO transactions (description, amount, payer, date)
       VALUES ($1, $2, $3, NOW())
@@ -120,20 +161,24 @@ fastify.post('/api/add-expense', async (request, reply) => {
     `;
     await pool.query(insertQuery, [description, amount, payer]);
 
+    // Check and archive any transactions from previous months.
+    await archiveOldTransactions();
+  
+
+    // Retrieve the updated list of expenses.
     const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
     let html = '<ul>';
-    for (const expense of rows) {
-      html += `<li>${expense.description} - ${expense.amount} - ${expense.payer}</li>`;
-    }
+    rows.forEach(expense => {
+      html += `<li>${expense.description} - ${expense.amount} - ${expense.payer} - ${new Date(expense.date).toLocaleString()}</li>`;
+    });
     html += '</ul>';
-
-    // Return the HTML fragment
     reply.type('text/html').send(html);
   } catch (err) {
     console.error('Error adding expense:', err);
     reply.status(500).send('Error adding expense');
   }
 });
+
 
 export default async (req, res) => {
   await fastify.ready();
