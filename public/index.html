@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker</title>
+    <title>Adam & Eve's Expenses</title>
     <script src="https://unpkg.com/htmx.org"></script>
 </head>
 <body>
-    <h1>Expenses</h1>
+    <h1> Apples! </h1>
     <form hx-post="/api/add-expense" hx-trigger="submit" hx-target="#expense-list" hx-swap="outerHTML">
         <input type="text" name="description" placeholder="Description" required>
         <input type="number" name="amount" placeholder="Amount" required>
@@ -26,5 +26,15 @@
       </div>
     <h2>Balance: <span id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span></h2>
     <ul id="expense-list" hx-get="/api/expenses" hx-trigger="load"></ul>
+
+    <h3>About</h3>
+    This app was built by <a href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and <a href="https://noelletimmons.com/">Noelle</a>. 
+    <h4>To do:</h4>
+    <ul>
+        <li>Mobile Optimize</li>
+        <li>Offline Mode</li>
+        <li>Make it look better</li>
+        <li>Month archives views</li>
+    </ul>
 </body>
 </html>
