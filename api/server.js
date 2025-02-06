@@ -1,101 +1,93 @@
+/**
+ * server.js
+ *
+ * A Fastify server that connects to a PostgreSQL database to manage expense transactions.
+ * It provides endpoints to:
+ *  - List expenses grouped by payer with totals and delete buttons.
+ *  - Calculate the balance between Adam and Eve.
+ *  - Add new expenses.
+ *  - Delete an expense.
+ * It also serves static files from the public directory.
+ * When run locally (outside of Vercel), it listens on port 3000.
+ */
+
 import Fastify from 'fastify';
 import pg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fastifyStatic from '@fastify/static';
-import { archiveOldTransactions } from '../utils/archive.js'; 
-
-
+import formbody from '@fastify/formbody';
 
 dotenv.config();
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 
+// Set up the PostgreSQL pool.
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 pool.connect()
   .then(() => console.log("Database connected"))
   .catch(err => console.error("Database connection error:", err));
 
-  const fastify = Fastify({
-    logger: {
-      level: 'warn' // only log warnings and errors (suppress info logs)
-    }
-  });
+// Create the Fastify instance.
+const fastify = Fastify({
+  logger: {
+    level: 'warn' // only log warnings and errors (suppress info logs)
+  }
+});
 
+// Register the formbody plugin.
 fastify.register(formbody);
-import formbody from '@fastify/formbody';
-const PORT = process.env.PORT || 3000;
 
+// Resolve __dirname and __filename for ES modules.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log(`Serving static files from: ${path.join(__dirname, 'public')}`);
-
+// Register static file serving for files in the public directory.
 fastify.register(fastifyStatic, {
   root: path.join(__dirname, '../public'),
-  prefix: '/', // optional: default '/'
+  prefix: '/',
 });
 
-fastify.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
 /**
  * GET /api/expenses
  *
- * Retrieves all expense transactions from the database, groups them by payer,
- * and returns an HTML fragment with a separate list for each payer including a total at the bottom.
- *
- * @param {FastifyRequest} request - The incoming request.
- * @param {FastifyReply} reply - The reply interface.
- * @returns {Promise<void>} - Sends an HTML fragment containing the grouped expenses list.
+ * Retrieves all expense transactions, groups them by payer,
+ * and returns an HTML fragment that displays each group with a delete button for each expense.
  */
 fastify.get('/api/expenses', async (request, reply) => {
   try {
-    // Retrieve all transactions ordered by date descending.
     const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
-
-    // Group transactions by payer.
     const groupedExpenses = rows.reduce((acc, expense) => {
       const payer = expense.payer;
-      if (!acc[payer]) {
-        acc[payer] = [];
-      }
+      if (!acc[payer]) acc[payer] = [];
       acc[payer].push(expense);
       return acc;
     }, {});
 
-    // Build HTML for each payer's expense list.
     let html = '';
     for (const payer in groupedExpenses) {
       const expenses = groupedExpenses[payer];
-      // Calculate the total amount for this payer.
       const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
-
-      // Header for the payer.
       html += `<h2 class="text-xl font-bold mt-4">${payer}</h2>`;
       html += '<ul class="list-disc ml-6">';
-      // Build each expense item with a formatted date.
       expenses.forEach(expense => {
         const expenseDate = new Date(expense.date);
         const formattedDate = expenseDate.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+          year: 'numeric', month: 'long', day: 'numeric'
         }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit'
+          hour: '2-digit', minute: '2-digit'
         });
-        html += `<li>${expense.description} - $${expense.amount} - ${formattedDate}</li>`;
+        html += `<li id="expense-${expense.id}">${expense.description} - $${expense.amount} - ${formattedDate}
+  <button class="ml-2 text-red-500"
+          hx-delete="/api/delete-expense?id=${expense.id}"
+          hx-target="closest li"
+          hx-swap="delete">
+    Delete
+  </button>
+</li>`;
       });
       html += '</ul>';
-      // Display total for this payer.
       html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
     }
-
-    // Send the constructed HTML fragment.
     reply.type('text/html').send(html);
   } catch (err) {
     console.error('Error fetching expenses:', err);
@@ -103,43 +95,30 @@ fastify.get('/api/expenses', async (request, reply) => {
   }
 });
 
-
 /**
  * GET /api/balance
  *
  * Calculates the net balance between Adam and Eve and returns an HTML message.
- * If the balance is positive, Eve owes Adam; if negative, Adam owes Eve; if zero, it's all settled.
- *
- * @param {FastifyRequest} request - The incoming request.
- * @param {FastifyReply} reply - The reply interface.
- * @returns {Promise<void>}
+ * A positive balance means Eve owes Adam; a negative balance means Adam owes Eve.
  */
 fastify.get('/api/balance', async (request, reply) => {
   try {
-    // Query sums for each payer with COALESCE to handle null values.
     const { rows } = await pool.query(`
       SELECT 
         COALESCE(SUM(CASE WHEN payer = 'Adam' THEN amount::numeric ELSE 0 END), 0) AS adam_paid,
         COALESCE(SUM(CASE WHEN payer = 'Eve' THEN amount::numeric ELSE 0 END), 0) AS eve_paid
       FROM transactions
     `);
-    
-    // Parse amounts and compute the balance.
     const { adam_paid, eve_paid } = rows[0];
     const balance = parseFloat(adam_paid) - parseFloat(eve_paid);
     let message = '';
-
     if (balance > 0) {
-      // Adam paid more so Eve owes Adam.
       message = `Eve owes Adam $${balance.toFixed(2)}`;
     } else if (balance < 0) {
-      // Eve paid more so Adam owes Eve.
       message = `Adam owes Eve $${Math.abs(balance).toFixed(2)}`;
     } else {
       message = 'All settled up!';
     }
-
-    // Return the message as HTML so that htmx can update the UI.
     reply.type('text/html').send(message);
   } catch (err) {
     console.error('Error calculating balance:', err);
@@ -147,49 +126,61 @@ fastify.get('/api/balance', async (request, reply) => {
   }
 });
 
-
 /**
  * POST /api/add-expense
  *
- * Adds a new expense transaction and triggers archiving if a new month has begun.
- * If checkboxes are used for "payer" and both are checked, the first value is used.
- *
- * @param {FastifyRequest} request - The incoming request containing form data.
- * @param {FastifyReply} reply - The reply interface.
- * @returns {Promise<void>}
+ * Adds a new expense transaction and returns an updated HTML fragment of expenses.
+ * If multiple checkboxes are used for payer, only the first value is taken.
  */
 fastify.post('/api/add-expense', async (request, reply) => {
   const { description, amount } = request.body;
   let payer = request.body.payer;
-
-  // If "payer" is an array (i.e. both checkboxes are checked), choose the first.
   if (Array.isArray(payer)) {
     payer = payer[0];
   }
-
   if (!description || !amount || !payer) {
     return reply.status(400).send('Missing required fields');
   }
-
   try {
-    // Insert new expense with current timestamp.
     const insertQuery = `
       INSERT INTO transactions (description, amount, payer, date)
       VALUES ($1, $2, $3, NOW())
       RETURNING *
     `;
     await pool.query(insertQuery, [description, amount, payer]);
-
-    // Check and archive any transactions from previous months.
-    await archiveOldTransactions();
-  
-
-    // Retrieve the updated list of expenses.
+    // Retrieve updated expenses list.
     const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
+    const groupedExpenses = rows.reduce((acc, expense) => {
+      const payer = expense.payer;
+      if (!acc[payer]) acc[payer] = [];
+      acc[payer].push(expense);
+      return acc;
+    }, {});
     let html = '';
-    rows.forEach(expense => {
-      html += `<li>${expense.description} - ${expense.amount} - ${expense.payer} - ${new Date(expense.date).toLocaleString()}</li>`;
-    });
+    for (const payer in groupedExpenses) {
+      const expenses = groupedExpenses[payer];
+      const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+      html += `<h2 class="text-xl font-bold mt-4">${payer}</h2>`;
+      html += '<ul class="list-disc ml-6">';
+      expenses.forEach(expense => {
+        const expenseDate = new Date(expense.date);
+        const formattedDate = expenseDate.toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
+          hour: '2-digit', minute: '2-digit'
+        });
+        html += `<li id="expense-${expense.id}">${expense.description} - $${expense.amount} - ${formattedDate}
+  <button class="ml-2 text-red-500"
+          hx-delete="/api/delete-expense?id=${expense.id}"
+          hx-target="closest li"
+          hx-swap="delete">
+    Delete
+  </button>
+</li>`;
+      });
+      html += '</ul>';
+      html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
+    }
     reply.type('text/html').send(html);
   } catch (err) {
     console.error('Error adding expense:', err);
@@ -197,26 +188,65 @@ fastify.post('/api/add-expense', async (request, reply) => {
   }
 });
 
-
-export default async (req, res) => {
-  await fastify.ready();
-  fastify.server.emit('request', req, res);
-};
-
-fastify.get('/api/debug-env', async (_, reply) => {
-  reply.send({ databaseUrl: process.env.DATABASE_URL || "Not Found" });
+/**
+ * DELETE /api/delete-expense
+ *
+ * Deletes an expense given its id (provided as a query parameter) and returns an empty response.
+ */
+fastify.delete('/api/delete-expense', async (request, reply) => {
+  try {
+    const id = request.query.id;
+    if (!id) {
+      return reply.status(400).send('Missing expense id');
+    }
+    await pool.query('DELETE FROM transactions WHERE id = $1', [id]);
+    // Return 200 OK with an empty body so HTMX can remove the DOM element.
+    reply.status(200).send('');
+  } catch (err) {
+    console.error('Error deleting expense:', err);
+    reply.status(500).send('Error deleting expense');
+  }
 });
 
-fastify.get('/', async (_, reply) => {
+/**
+ * GET /
+ *
+ * Serves the index.html file from the public directory.
+ */
+fastify.get('/', async (request, reply) => {
   return reply.sendFile('index.html');
 });
 
+/**
+ * 404 Handler
+ *
+ * Serves index.html for unmatched routes (supporting a single-page application).
+ */
 fastify.setNotFoundHandler((request, reply) => {
-  reply.sendFile('index.html', (err) => {
-    if (err) {
-      reply.status(500).send('Error serving index.html');
-    }
-  });
+  return reply.sendFile('index.html');
 });
 
+/**
+ * Export the Fastify server as a serverless function for Vercel.
+ */
+export default async (req, res) => {
+  try {
+    await fastify.ready();
+    fastify.server.emit('request', req, res);
+  } catch (err) {
+    console.error('Error during request handling:', err);
+    res.statusCode = 500;
+    res.end("Internal Server Error");
+  }
+};
 
+// Start the server locally if not running in Vercel.
+if (process.env.VERCEL_ENV === undefined) {
+  fastify.listen({ port: 3000, host: '0.0.0.0' }, (err, address) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    console.log(`Server listening on ${address}`);
+  });
+}
