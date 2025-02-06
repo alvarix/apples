@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apples!</title>
+    
+    
     <script src="https://unpkg.com/htmx.org"></script>
+
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
@@ -12,6 +15,15 @@
     <link rel="manifest" href="/favicon/site.webmanifest" />
 </head>
 <body>
+    <style>
+        aside {
+            border-radius: 24px;
+            background-color: #eee;
+            padding: 24px;
+            margin-top: 100px;
+        }
+    </style>
+
     <h1></h1>
     <form hx-post="/api/add-expense" hx-trigger="submit" hx-target="#expense-list" hx-swap="outerHTML">
         <input type="text" name="description" placeholder="Description" required>
@@ -29,14 +41,17 @@
       <div id="expense-list">
         <!-- Expense list will be updated here -->
       </div>
-    <h2>Balance: <span id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span></h2>
+    <h2>Balance: <span style='font-weight: normal;' id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span></h2>
     <div id="expense-list" hx-get="/api/expenses" hx-trigger="load"></div>
 
+    <aside>
     <h3>About</h3>
     <p>
     This app was built by <a href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and <a href="https://noelletimmons.com/">Noelle</a></p>. 
     <p>It uses <a href="https://htmx.org/">HTMX</a> for the front-end and free Neon Postgress for data.</p>
-    <h4>To do:</h4>
+
+    <hr>
+    <h4 class="mt24">To do:</h4>
     <ul>
         <li>Mobile Optimize</li>
         <li>Add HTMX and Tailwind as dependencies</li>
@@ -44,5 +59,6 @@
         <li>Make it look better</li>
         <li>Month archives views</li>
     </ul>
+    </aside>
 </body>
 </html>
