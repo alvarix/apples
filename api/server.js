@@ -95,11 +95,27 @@ fastify.get('/api/expenses', async (request, reply) => {
   }
 });
 
+
+
+
+
+
+
+
+
+
+
+
 /**
  * GET /api/balance
  *
- * Calculates the net balance between Adam and Eve and returns an HTML message.
- * A positive balance means Eve owes Adam; a negative balance means Adam owes Eve.
+ * Calculates the net balance between Adam and Eve based on splitting total expenses in half.
+ * Each person should pay half of the total expense. If Adam overpaid, then Eve owes him the difference,
+ * and vice versa.
+ *
+ * @param {FastifyRequest} request - The incoming request.
+ * @param {FastifyReply} reply - The reply interface.
+ * @returns {Promise<void>}
  */
 fastify.get('/api/balance', async (request, reply) => {
   try {
@@ -109,22 +125,41 @@ fastify.get('/api/balance', async (request, reply) => {
         COALESCE(SUM(CASE WHEN payer = 'Eve' THEN amount::numeric ELSE 0 END), 0) AS eve_paid
       FROM transactions
     `);
-    const { adam_paid, eve_paid } = rows[0];
-    const balance = parseFloat(adam_paid) - parseFloat(eve_paid);
+
+    const adamPaid = parseFloat(rows[0].adam_paid);
+    const evePaid = parseFloat(rows[0].eve_paid);
+    const total = adamPaid + evePaid;
+    const idealShare = total / 2;
     let message = '';
-    if (balance > 0) {
-      message = `Eve owes Adam $${balance.toFixed(2)}`;
-    } else if (balance < 0) {
-      message = `Adam owes Eve $${Math.abs(balance).toFixed(2)}`;
+
+    if (adamPaid > idealShare) {
+      // Adam overpaid; Eve owes the difference.
+      const diff = adamPaid - idealShare;
+      message = `Eve owes Adam $${diff.toFixed(2)}`;
+    } else if (adamPaid < idealShare) {
+      // Adam underpaid; Adam owes the difference.
+      const diff = idealShare - adamPaid;
+      message = `Adam owes Eve $${diff.toFixed(2)}`;
     } else {
       message = 'All settled up!';
     }
+
     reply.type('text/html').send(message);
   } catch (err) {
     console.error('Error calculating balance:', err);
     reply.status(500).send('Error calculating balance');
   }
 });
+
+
+
+
+
+
+
+
+
+
 
 /**
  * POST /api/add-expense
@@ -188,6 +223,13 @@ fastify.post('/api/add-expense', async (request, reply) => {
   }
 });
 
+
+
+
+
+
+
+
 /**
  * DELETE /api/delete-expense
  *
@@ -207,6 +249,21 @@ fastify.delete('/api/delete-expense', async (request, reply) => {
     reply.status(500).send('Error deleting expense');
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * GET /
