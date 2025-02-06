@@ -11,12 +11,19 @@
     <form hx-post="/api/add-expense" hx-trigger="submit" hx-target="#expense-list" hx-swap="outerHTML">
         <input type="text" name="description" placeholder="Description" required>
         <input type="number" name="amount" placeholder="Amount" required>
-        <select name="payer">
-            <option value="Adam">Adam</option>
-            <option value="Eve">Eve</option>
-        </select>
+        <div>
+          <label>
+            <input type="checkbox" name="payer" value="Adam"> Adam
+          </label>
+          <label>
+            <input type="checkbox" name="payer" value="Eve"> Eve
+          </label>
+        </div>
         <button type="submit">Add Expense</button>
-    </form>
+      </form>
+      <div id="expense-list">
+        <!-- Expense list will be updated here -->
+      </div>
     <h2>Balance: <span id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span></h2>
     <ul id="expense-list" hx-get="/api/expenses" hx-trigger="load"></ul>
 </body>
