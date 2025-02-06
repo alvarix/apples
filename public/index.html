@@ -7,13 +7,8 @@
     <script src="https://unpkg.com/htmx.org"></script>
 </head>
 <body>
-
-    <ul id="expense-list" hx-get="/api/expenses" hx-trigger="load"></ul>
-    <h2>Balance: <span id="balance" hx-get="/api/balance" hx-trigger="load every 5s"></span></h2>
-    <form hx-post="/api/add-expense" hx-trigger="submit" hx-target="#expense-list" hx-swap="outerHTML">
-
     <h1>Expenses</h1>
-    <form hx-post="/add-expense" hx-trigger="submit" hx-target="#expense-list" hx-swap="outerHTML">
+    <form hx-post="/api/add-expense" hx-trigger="submit" hx-target="#expense-list" hx-swap="outerHTML">
         <input type="text" name="description" placeholder="Description" required>
         <input type="number" name="amount" placeholder="Amount" required>
         <select name="payer">
@@ -22,7 +17,7 @@
         </select>
         <button type="submit">Add Expense</button>
     </form>
-    <h2>Balance: <span id="balance" hx-get="/balance" hx-trigger="load every 5s"></span></h2>
-    <ul id="expense-list" hx-get="/expenses" hx-trigger="load"></ul>
+    <h2>Balance: <span id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span></h2>
+    <ul id="expense-list" hx-get="/api/expenses" hx-trigger="load"></ul>
 </body>
 </html>
