@@ -26,16 +26,16 @@
 
     <h1></h1>
     <form hx-post="/api/add-expense" hx-trigger="submit" hx-target="#expense-list" hx-swap="outerHTML">
-        <input type="text" name="description" placeholder="Description" required>
-        <input type="number" name="amount" placeholder="Amount" required>
         <div>
-          <label>
-            <input type="checkbox" name="payer" value="Adam"> Adam
-          </label>
-          <label>
-            <input type="checkbox" name="payer" value="Eve"> Eve
-          </label>
+            <label>
+                <input type="radio" name="payer" value="Adam"> Adam
+            </label>
+            <label>
+                <input type="radio" name="payer" value="Eve"> Eve
+            </label>
         </div>
+        <input type="text" name="description" placeholder="Description" required>
+        $<input type="number" name="amount" placeholder="Amount" required>
         <button type="submit">Add Expense</button>
       </form>
     <h2>Balance: <span style='font-weight: normal;' id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span></h2>
@@ -51,6 +51,7 @@
     <h4 class="mt24">To do:</h4>
     <ul>
         <li>Mobile Optimize</li>
+        <li>Pre-checked Split checkbox</li>
         <li>Auth</li>
         <li>Add HTMX and Tailwind as dependencies</li>
         <li>Offline Mode</li>

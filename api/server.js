@@ -47,6 +47,13 @@ fastify.register(fastifyStatic, {
   prefix: '/',
 });
 
+
+
+
+
+
+
+
 /**
  * GET /api/expenses
  *
