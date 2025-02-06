@@ -38,9 +38,6 @@
         </div>
         <button type="submit">Add Expense</button>
       </form>
-      <div id="expense-list">
-        <!-- Expense list will be updated here -->
-      </div>
     <h2>Balance: <span style='font-weight: normal;' id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span></h2>
     <div id="expense-list" hx-get="/api/expenses" hx-trigger="load"></div>
 
