@@ -84,13 +84,14 @@ fastify.get('/api/expenses', async (request, reply) => {
           hour: '2-digit', minute: '2-digit'
         });
         html += `<li id="expense-${expense.id}">${expense.description} - $${expense.amount} - ${formattedDate}
-  <button class="ml-2 text-red-500"
+        <button class="ml-2 text-red-500 delete"
+          hx-confirm="Delete ${expense.description}?"
           hx-delete="/api/delete-expense?id=${expense.id}"
           hx-target="closest li"
           hx-swap="delete">
-    Delete
-  </button>
-</li>`;
+          x
+        </button>
+      </li>`;
       });
       html += '</ul>';
       html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
@@ -212,13 +213,14 @@ fastify.post('/api/add-expense', async (request, reply) => {
           hour: '2-digit', minute: '2-digit'
         });
         html += `<li id="expense-${expense.id}">${expense.description} - $${expense.amount} - ${formattedDate}
-  <button class="ml-2 text-red-500"
+        <button class="delete ml-2 text-red-500"
+          hx-confirm="Delete ${expense.description}?"
           hx-delete="/api/delete-expense?id=${expense.id}"
           hx-target="closest li"
           hx-swap="delete">
-    Delete
-  </button>
-</li>`;
+          x
+        </button>
+      </li>`;
       });
       html += '</ul>';
       html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
