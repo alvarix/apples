@@ -10,8 +10,13 @@ body {
     margin-top: 1em;
 }
 
-#x button {
+button {
     background-color: #ccc;
+}
+#x input[type='number'],
+#x input[type='text'] {
+    width: 100%;
+    max-width: 500px;
 }
 
 aside {
@@ -39,4 +44,10 @@ aside ul {
 h1 {
     font-size: 5rem;
     Xcolor: red;
+}
+
+
+button,
+input {
+    border-radius: 5px;
 }

@@ -71,8 +71,8 @@
     <!-- Persistent Todo App using Alpine.js -->
     <div x-data="todoApp()" x-init="fetchTodos()">
       <form @submit.prevent="addTodo" class="mb-4">
-        <input type="text" x-model="newTodo" placeholder="New task" class="p-2 border rounded" />
-        <button type="submit" class="p-2 bg-blue-500 text-white rounded ml-2">Add</button>
+        <input type="text" x-model="newTodo" placeholder="New task" class="p-2" />
+        <button type="submit" class="p-2  ml-2">Add</button>
       </form>
       <ul>
         <template x-for="(todo, index) in todos" :key="todo.id">
