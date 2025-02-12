@@ -19,6 +19,9 @@ import { fileURLToPath } from 'url';
 import fastifyStatic from '@fastify/static';
 import formbody from '@fastify/formbody';
 
+import todoRoutes from './todoRoutes.js';
+
+
 dotenv.config();
 
 // Set up the PostgreSQL pool.
@@ -36,7 +39,7 @@ const fastify = Fastify({
 
 // Register the formbody plugin.
 fastify.register(formbody);
-
+fastify.register(todoRoutes);
 // Resolve __dirname and __filename for ES modules.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -283,13 +286,15 @@ fastify.get('/', async (request, reply) => {
   return reply.sendFile('index.html');
 });
 
-/**
- * 404 Handler
- *
- * Serves index.html for unmatched routes (supporting a single-page application).
- */
+
+// 404 Handler: Only send index.html if the URL does not appear to be an asset.
 fastify.setNotFoundHandler((request, reply) => {
-  return reply.sendFile('index.html');
+  // If the URL contains a dot, assume it's an asset and send a 404.
+  if (request.raw.url.includes('.')) {
+    reply.status(404).send('Not Found');
+  } else {
+    reply.sendFile('index.html');
+  }
 });
 
 /**
@@ -316,80 +321,3 @@ if (process.env.VERCEL_ENV === undefined) {
     console.log(`Server listening on ${address}`);
   });
 }
-
-
-
-/**
- * GET /api/todos
- *
- * Retrieves all todo items from the database.
- */
-fastify.get('/api/todos', async (request, reply) => {
-  try {
-    const { rows } = await pool.query('SELECT * FROM todos ORDER BY id ASC');
-    reply.send(rows);
-  } catch (err) {
-    console.error('Error fetching todos:', err);
-    reply.status(500).send('Error fetching todos');
-  }
-});
-
-/**
- * POST /api/todos
- *
- * Adds a new todo item to the database.
- */
-fastify.post('/api/todos', async (request, reply) => {
-  const { text } = request.body;
-  if (!text) return reply.status(400).send('Missing todo text');
-  try {
-    const { rows } = await pool.query(
-      'INSERT INTO todos (text, done) VALUES ($1, $2) RETURNING *',
-      [text, false]
-    );
-    reply.send(rows[0]);
-  } catch (err) {
-    console.error('Error adding todo:', err);
-    reply.status(500).send('Error adding todo');
-  }
-});
-
-/**
- * PATCH /api/todos/:id
- *
- * Toggles the completion status of a todo item.
- */
-fastify.patch('/api/todos/:id', async (request, reply) => {
-  const { id } = request.params;
-  try {
-    // Retrieve the current status of the todo.
-    const { rows } = await pool.query('SELECT done FROM todos WHERE id = $1', [id]);
-    if (rows.length === 0) return reply.status(404).send('Todo not found');
-    const currentDone = rows[0].done;
-    // Update the todo with the toggled status.
-    const { rows: updatedRows } = await pool.query(
-      'UPDATE todos SET done = $1 WHERE id = $2 RETURNING *',
-      [!currentDone, id]
-    );
-    reply.send(updatedRows[0]);
-  } catch (err) {
-    console.error('Error updating todo:', err);
-    reply.status(500).send('Error updating todo');
-  }
-});
-
-/**
- * DELETE /api/todos/:id
- *
- * Deletes a todo item from the database.
- */
-fastify.delete('/api/todos/:id', async (request, reply) => {
-  const { id } = request.params;
-  try {
-    await pool.query('DELETE FROM todos WHERE id = $1', [id]);
-    reply.status(200).send('');
-  } catch (err) {
-    console.error('Error deleting todo:', err);
-    reply.status(500).send('Error deleting todo');
-  }
-});

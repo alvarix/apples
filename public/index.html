@@ -4,98 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Apples!</title>
-  
+   <!-- Alpine component for the persistent todo app -->
+  <script src="/js/todo.js" defer></script> 
   <!-- HTMX for AJAX requests -->
   <script src="https://unpkg.com/htmx.org"></script>
   <!-- Alpine.js for interactivity -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-  <!-- Alpine component for the persistent todo app -->
-  <script defer>
-    /**
-     * Provides reactive data and methods for the persistent todo app.
-     * Todos are fetched from and saved to the backend database.
-     * @returns {Object} The Alpine.js data object.
-     */
-    function todoApp() {
-      return {
-        todos: [],
-        newTodo: '',
-        /**
-         * Fetches todos from the database.
-         */
-        async fetchTodos() {
-          try {
-            const res = await fetch('/api/todos');
-            this.todos = await res.json();
-          } catch (err) {
-            console.error('Error fetching todos:', err);
-          }
-        },
-        /**
-         * Adds a new todo item to the database.
-         */
-        async addTodo() {
-          if (this.newTodo.trim() === '') return;
-          try {
-            const res = await fetch('/api/todos', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: this.newTodo.trim() })
-            });
-            if (res.ok) {
-              const newItem = await res.json();
-              this.todos.push(newItem);
-              this.newTodo = '';
-            } else {
-              console.error('Error adding todo');
-            }
-          } catch (err) {
-            console.error('Error adding todo:', err);
-          }
-        },
-        /**
-         * Toggles the done status of a todo item in the database.
-         * @param {number} index - The index of the todo to toggle.
-         */
-        async toggleTodo(index) {
-          const todo = this.todos[index];
-          try {
-            const res = await fetch(`/api/todos/${todo.id}`, {
-              method: 'PATCH'
-            });
-            if (res.ok) {
-              const updatedTodo = await res.json();
-              this.todos.splice(index, 1, updatedTodo);
-            } else {
-              console.error('Error updating todo');
-            }
-          } catch (err) {
-            console.error('Error updating todo:', err);
-          }
-        },
-        /**
-         * Removes a todo item from the database after confirmation.
-         * @param {number} index - The index of the todo to remove.
-         */
-        async removeTodo(index) {
-          const todo = this.todos[index];
-          if (!confirm('Are you sure you want to delete this todo?')) return;
-          try {
-            const res = await fetch(`/api/todos/${todo.id}`, {
-              method: 'DELETE'
-            });
-            if (res.ok) {
-              this.todos.splice(index, 1);
-            } else {
-              console.error('Error deleting todo');
-            }
-          } catch (err) {
-            console.error('Error deleting todo:', err);
-          }
-        }
-      }
-    }
-  </script>
+
+ 
 
   <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
@@ -131,13 +47,19 @@ aside ul {
   </style>
 
   <h1></h1>
-  <form hx-post="/api/add-expense" hx-trigger="submit" hx-target="#expense-list" hx-swap="outerHTML">
+  <form 
+    hx-post="/api/add-expense" 
+    hx-trigger="submit" 
+    hx-target="#expense-list" 
+    hx-swap="outerHTML"
+    hx-on:htmx:afterRequest="if (event.detail.success) { this.reset(); }">
+    
     <div>
       <label>
-        <input type="radio" name="payer" value="Adam" /> Adam
+        <input type="radio" name="payer" value="Adam" required/> Adam
       </label>
       <label>
-        <input type="radio" name="payer" value="Eve" /> Eve
+        <input type="radio" name="payer" value="Eve" required/> Eve
       </label>
     </div>
     <input type="text" name="description" placeholder="Description" required />
