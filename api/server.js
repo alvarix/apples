@@ -86,7 +86,7 @@ fastify.get('/api/expenses', async (request, reply) => {
         }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
           hour: '2-digit', minute: '2-digit'
         });
-        html += `<li id="expense-${expense.id}">${expense.description} - $${expense.amount} - ${formattedDate}
+        html += `<li id="expense-${expense.id}"><div class='text-lg'>${expense.description} <strong class='float-right'>$${expense.amount}</strong> </div> <em class='text-gray-400'>${formattedDate}</em>
         <button class="ml-2 text-red-500 delete"
           hx-confirm="Delete ${expense.description}?"
           hx-delete="/api/delete-expense?id=${expense.id}"
@@ -141,19 +141,20 @@ fastify.get('/api/balance', async (request, reply) => {
     const evePaid = parseFloat(rows[0].eve_paid);
     const total = adamPaid + evePaid;
     const idealShare = total / 2;
-    let message = '';
+    let message = '<div class="text-red-500">';
 
     if (adamPaid > idealShare) {
       // Adam overpaid; Eve owes the difference.
       const diff = adamPaid - idealShare;
-      message = `Eve owes Adam $${diff.toFixed(2)}`;
+      message += `Eve owes Adam <strong>$${diff.toFixed(2)}</strong>`;
     } else if (adamPaid < idealShare) {
       // Adam underpaid; Adam owes the difference.
       const diff = idealShare - adamPaid;
-      message = `Adam owes Eve $${diff.toFixed(2)}`;
+      message += `Adam owes Eve <strong>$${diff.toFixed(2)}</strong>`;
     } else {
       message = 'All settled up!';
     }
+    message += '</div>';
 
     reply.type('text/html').send(message);
   } catch (err) {

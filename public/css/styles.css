@@ -1,0 +1,42 @@
+body {
+    padding: 1em !important;
+    background-color:#f1f9f9;
+}
+
+#x button,
+#x input {
+    border: 1px solid #ccc;
+    padding: .25em .5em;
+    margin-top: 1em;
+}
+
+#x button {
+    background-color: #ccc;
+}
+
+aside {
+    border-radius: 24px;
+    background-color: #eee;
+    padding: 24px;
+    margin-top: 100px;
+}
+.line-through {
+    text-decoration: line-through;
+}
+
+aside ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.delete {
+    cursor: pointer;
+    border: none;
+    padding: 2px 10px;
+    background: none;
+}
+
+h1 {
+    font-size: 5rem;
+    color: red;
+}

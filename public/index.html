@@ -11,6 +11,8 @@
   <!-- Alpine.js for interactivity -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
+  <link rel="stylesheet" href="/css/tw.css">
+    <link rel="stylesheet" href="/css/styles.css">
  
 
   <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
@@ -20,34 +22,12 @@
   <link rel="manifest" href="/favicon/site.webmanifest" />
 </head>
 <body>
-<style>
-aside {
-    border-radius: 24px;
-    background-color: #eee;
-    padding: 24px;
-    margin-top: 100px;
-}
-.line-through {
-    text-decoration: line-through;
-}
 
-aside ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.delete {
-    width: 2em;
-    height: 2em;
-    cursor: pointer;
-    border: none;
-    padding: 10px;
-    background: none;
-}
-  </style>
 
   <h1></h1>
   <form 
+    class="text-lg"
+    id="x"
     hx-post="/api/add-expense" 
     hx-trigger="submit" 
     hx-target="#expense-list" 
@@ -62,11 +42,17 @@ aside ul {
         <input type="radio" name="payer" value="Eve" required/> Eve
       </label>
     </div>
-    <input type="text" name="description" placeholder="Description" required />
-    $<input type="number" name="amount" placeholder="Amount" required />
-    <button type="submit">Add Expense</button>
+    <div>
+        <input type="text" name="description" placeholder="Description" required />
+    </div>
+    <div>
+        <input type="number" name="amount" placeholder="$ Amount" required />
+    </div>
+    <div>
+        <button type="submit">Add Expense</button>
+    </div>
   </form>
-  <h2>
+  <h2 class="mt-24">
     Balance:
     <span style="font-weight: normal;" id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span>
   </h2>
