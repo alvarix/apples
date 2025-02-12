@@ -78,7 +78,7 @@ fastify.get('/api/expenses', async (request, reply) => {
       const expenses = groupedExpenses[payer];
       const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
       html += `<h2 class="text-xl font-bold mt-4">${payer}</h2>`;
-      html += '<ul class="list-disc ml-6">';
+      html += '<ul class="">';
       expenses.forEach(expense => {
         const expenseDate = new Date(expense.date);
         const formattedDate = expenseDate.toLocaleDateString('en-US', {
@@ -86,8 +86,8 @@ fastify.get('/api/expenses', async (request, reply) => {
         }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
           hour: '2-digit', minute: '2-digit'
         });
-        html += `<li id="expense-${expense.id}"><div class='text-lg'>${expense.description} <strong class='float-right'>$${expense.amount}</strong> </div> <em class='text-gray-400'>${formattedDate}</em>
-        <button class="ml-2 text-red-500 delete"
+        html += `<li id="expense-${expense.id}" class='border-t m-4 py-4'><div class='text-lg'>${expense.description} <strong class='float-right'>$${expense.amount}</strong> </div> <em class='text-gray-400'>${formattedDate}</em>
+        <button class="ml-2 text-red-500 delete float-right"
           hx-confirm="Delete ${expense.description}?"
           hx-delete="/api/delete-expense?id=${expense.id}"
           hx-target="closest li"
