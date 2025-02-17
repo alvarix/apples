@@ -21,7 +21,6 @@ import formbody from '@fastify/formbody';
 
 import todoRoutes from './todoRoutes.js';
 
-
 dotenv.config();
 
 // Set up the PostgreSQL pool.
@@ -33,60 +32,56 @@ pool.connect()
 // Create the Fastify instance.
 const fastify = Fastify({
   logger: {
-    level: 'warn' // only log warnings and errors (suppress info logs)
+    level: 'warn' // only log warnings and errors
   }
 });
 
-// Register the formbody plugin.
+// Register plugins.
 fastify.register(formbody);
 fastify.register(todoRoutes);
+
 // Resolve __dirname and __filename for ES modules.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Register static file serving for files in the public directory.
+// Serve static files from the public directory.
 fastify.register(fastifyStatic, {
   root: path.join(__dirname, '../public'),
   prefix: '/',
 });
 
-
-
-
-
-
-
-
 /**
- * GET /api/expenses
- *
- * Retrieves all expense transactions, groups them by payer,
- * and returns an HTML fragment that displays each group with a delete button for each expense.
+ * Generates HTML for displaying expense transactions.
+ * @param {Array} rows - The list of expense transactions.
+ * @returns {string} The HTML fragment representing grouped expenses.
  */
-fastify.get('/api/expenses', async (request, reply) => {
-  try {
-    const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
-    const groupedExpenses = rows.reduce((acc, expense) => {
-      const payer = expense.payer;
-      if (!acc[payer]) acc[payer] = [];
-      acc[payer].push(expense);
-      return acc;
-    }, {});
+function generateExpenseHtml(rows) {
+  const groupedExpenses = rows.reduce((acc, expense) => {
+    const payer = expense.payer;
+    if (!acc[payer]) acc[payer] = [];
+    acc[payer].push(expense);
+    return acc;
+  }, {});
 
-    let html = '';
-    for (const payer in groupedExpenses) {
-      const expenses = groupedExpenses[payer];
-      const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
-      html += `<h2>${payer}</h2>`;
-      html += '<ul>';
-      expenses.forEach(expense => {
-        const expenseDate = new Date(expense.date);
-        const formattedDate = expenseDate.toLocaleDateString('en-US', {
-          year: 'numeric', month: 'long', day: 'numeric'
-        }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
-          hour: '2-digit', minute: '2-digit'
-        });
-        html += `<li id="expense-${expense.id}"><h3>${expense.description} <strong>$${expense.amount}</strong> </h3> <em>${formattedDate}</em>
+  let html = '';
+  for (const payer in groupedExpenses) {
+    const expenses = groupedExpenses[payer];
+    const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+    html += `<h2 class="text-xl font-bold mt-4">${payer}</h2>`;
+    html += '<ul>';
+    expenses.forEach(expense => {
+      const expenseDate = new Date(expense.date);
+      const formattedDate = expenseDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      html += `<li id="expense-${expense.id}" class="border-t m-4 py-4">
+        <div class="text-lg">${expense.description} <strong class="float-right">$${expense.amount}</strong></div>
+        <em class="text-gray-400">${formattedDate}</em>
         <button class="ml-2 text-red-500 delete float-right"
           hx-confirm="Delete ${expense.description}?"
           hx-delete="/api/delete-expense?id=${expense.id}"
@@ -95,10 +90,23 @@ fastify.get('/api/expenses', async (request, reply) => {
           x
         </button>
       </li>`;
-      });
-      html += '</ul>';
-      html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
-    }
+    });
+    html += '</ul>';
+    html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
+  }
+  return html;
+}
+
+/**
+ * GET /api/expenses
+ *
+ * Retrieves all expense transactions, groups them by payer,
+ * and returns an HTML fragment that displays each group with delete buttons.
+ */
+fastify.get('/api/expenses', async (request, reply) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
+    const html = generateExpenseHtml(rows);
     reply.type('text/html').send(html);
   } catch (err) {
     console.error('Error fetching expenses:', err);
@@ -106,27 +114,10 @@ fastify.get('/api/expenses', async (request, reply) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
 /**
  * GET /api/balance
  *
  * Calculates the net balance between Adam and Eve based on splitting total expenses in half.
- * Each person should pay half of the total expense. If Adam overpaid, then Eve owes him the difference,
- * and vice versa.
- *
- * @param {FastifyRequest} request - The incoming request.
- * @param {FastifyReply} reply - The reply interface.
- * @returns {Promise<void>}
  */
 fastify.get('/api/balance', async (request, reply) => {
   try {
@@ -144,11 +135,9 @@ fastify.get('/api/balance', async (request, reply) => {
     let message = '<div class="text-red-500">';
 
     if (adamPaid > idealShare) {
-      // Adam overpaid; Eve owes the difference.
       const diff = adamPaid - idealShare;
       message += `Eve owes Adam <strong>$${diff.toFixed(2)}</strong>`;
     } else if (adamPaid < idealShare) {
-      // Adam underpaid; Adam owes the difference.
       const diff = idealShare - adamPaid;
       message += `Adam owes Eve <strong>$${diff.toFixed(2)}</strong>`;
     } else {
@@ -163,21 +152,10 @@ fastify.get('/api/balance', async (request, reply) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
 /**
  * POST /api/add-expense
  *
  * Adds a new expense transaction and returns an updated HTML fragment of expenses.
- * If multiple checkboxes are used for payer, only the first value is taken.
  */
 fastify.post('/api/add-expense', async (request, reply) => {
   const { description, amount } = request.body;
@@ -197,51 +175,13 @@ fastify.post('/api/add-expense', async (request, reply) => {
     await pool.query(insertQuery, [description, amount, payer]);
     // Retrieve updated expenses list.
     const { rows } = await pool.query('SELECT * FROM transactions ORDER BY date DESC');
-    const groupedExpenses = rows.reduce((acc, expense) => {
-      const payer = expense.payer;
-      if (!acc[payer]) acc[payer] = [];
-      acc[payer].push(expense);
-      return acc;
-    }, {});
-    let html = '';
-    for (const payer in groupedExpenses) {
-      const expenses = groupedExpenses[payer];
-      const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
-      html += `<h2>${payer}</h2>`;
-      html += '<ul>';
-      expenses.forEach(expense => {
-        const expenseDate = new Date(expense.date);
-        const formattedDate = expenseDate.toLocaleDateString('en-US', {
-          year: 'numeric', month: 'long', day: 'numeric'
-        }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
-          hour: '2-digit', minute: '2-digit'
-        });
-        html += `<li id="expense-${expense.id}">${expense.description} - $${expense.amount} - ${formattedDate}
-        <button class="delete"
-          hx-confirm="Delete ${expense.description}?"
-          hx-delete="/api/delete-expense?id=${expense.id}"
-          hx-target="closest li"
-          hx-swap="delete">
-          x
-        </button>
-      </li>`;
-      });
-      html += '</ul>';
-      html += `<p>Total for ${payer}: $${total.toFixed(2)}</p>`;
-    }
+    const html = generateExpenseHtml(rows);
     reply.type('text/html').send(html);
   } catch (err) {
     console.error('Error adding expense:', err);
     reply.status(500).send('Error adding expense');
   }
 });
-
-
-
-
-
-
-
 
 /**
  * DELETE /api/delete-expense
@@ -255,28 +195,12 @@ fastify.delete('/api/delete-expense', async (request, reply) => {
       return reply.status(400).send('Missing expense id');
     }
     await pool.query('DELETE FROM transactions WHERE id = $1', [id]);
-    // Return 200 OK with an empty body so HTMX can remove the DOM element.
     reply.status(200).send('');
   } catch (err) {
     console.error('Error deleting expense:', err);
     reply.status(500).send('Error deleting expense');
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * GET /
@@ -287,10 +211,8 @@ fastify.get('/', async (request, reply) => {
   return reply.sendFile('index.html');
 });
 
-
-// 404 Handler: Only send index.html if the URL does not appear to be an asset.
+// 404 Handler: Send index.html if URL does not appear to be an asset.
 fastify.setNotFoundHandler((request, reply) => {
-  // If the URL contains a dot, assume it's an asset and send a 404.
   if (request.raw.url.includes('.')) {
     reply.status(404).send('Not Found');
   } else {
