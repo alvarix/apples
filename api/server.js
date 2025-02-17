@@ -77,8 +77,8 @@ fastify.get('/api/expenses', async (request, reply) => {
     for (const payer in groupedExpenses) {
       const expenses = groupedExpenses[payer];
       const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
-      html += `<h2 class="text-xl font-bold mt-4">${payer}</h2>`;
-      html += '<ul class="">';
+      html += `<h2>${payer}</h2>`;
+      html += '<ul>';
       expenses.forEach(expense => {
         const expenseDate = new Date(expense.date);
         const formattedDate = expenseDate.toLocaleDateString('en-US', {
@@ -86,7 +86,7 @@ fastify.get('/api/expenses', async (request, reply) => {
         }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
           hour: '2-digit', minute: '2-digit'
         });
-        html += `<li id="expense-${expense.id}" class='border-t m-4 py-4'><div class='text-lg'>${expense.description} <strong class='float-right'>$${expense.amount}</strong> </div> <em class='text-gray-400'>${formattedDate}</em>
+        html += `<li id="expense-${expense.id}"><h3>${expense.description} <strong>$${expense.amount}</strong> </h3> <em>${formattedDate}</em>
         <button class="ml-2 text-red-500 delete float-right"
           hx-confirm="Delete ${expense.description}?"
           hx-delete="/api/delete-expense?id=${expense.id}"
@@ -207,8 +207,8 @@ fastify.post('/api/add-expense', async (request, reply) => {
     for (const payer in groupedExpenses) {
       const expenses = groupedExpenses[payer];
       const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
-      html += `<h2 class="text-xl font-bold mt-4">${payer}</h2>`;
-      html += '<ul class="list-disc ml-6">';
+      html += `<h2>${payer}</h2>`;
+      html += '<ul>';
       expenses.forEach(expense => {
         const expenseDate = new Date(expense.date);
         const formattedDate = expenseDate.toLocaleDateString('en-US', {
@@ -217,7 +217,7 @@ fastify.post('/api/add-expense', async (request, reply) => {
           hour: '2-digit', minute: '2-digit'
         });
         html += `<li id="expense-${expense.id}">${expense.description} - $${expense.amount} - ${formattedDate}
-        <button class="delete ml-2 text-red-500"
+        <button class="delete"
           hx-confirm="Delete ${expense.description}?"
           hx-delete="/api/delete-expense?id=${expense.id}"
           hx-target="closest li"
@@ -227,7 +227,7 @@ fastify.post('/api/add-expense', async (request, reply) => {
       </li>`;
       });
       html += '</ul>';
-      html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
+      html += `<p>Total for ${payer}: $${total.toFixed(2)}</p>`;
     }
     reply.type('text/html').send(html);
   } catch (err) {

@@ -1,6 +1,28 @@
+@tailwind base;
+@tailwind components;
+
 body {
     padding: 1em !important;
     background-color:#fcfbfb;
+}
+
+#expenses em {
+    /* @apply text-grey-400; no compiling yet */ 
+    color: #999
+}
+
+#expenses li h3 strong {
+    float: right;
+}
+
+#expenses h3 {
+   font-size: 1.2rem; 
+}
+#expenses li {
+    border-top: 1px solid #ccc;
+    margin: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 #x button,
@@ -51,3 +73,5 @@ button,
 input {
     border-radius: 5px;
 }
+
+@tailwind utilities;  
