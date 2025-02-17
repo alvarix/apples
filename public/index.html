@@ -31,9 +31,9 @@
     hx-post="/api/add-expense" 
     hx-trigger="submit" 
     hx-target="#expense-list" 
-    hx-swap="outerHTML"
-    hx-on:htmx:afterRequest="if (event.detail.success) { this.reset(); }">
-    
+    hx-swap="innerHTML"
+    hx-on:htmx:afterRequest="if (event.detail.success) { this.reset(); }"
+    >
     <div>
       <label>
         <input type="radio" name="payer" value="Adam" required/> Adam
