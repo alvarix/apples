@@ -72,12 +72,10 @@ function generateExpenseHtml(rows) {
     expenses.forEach(expense => {
       const expenseDate = new Date(expense.date);
       const formattedDate = expenseDate.toLocaleDateString('en-US', {
+        timeZone: 'EST',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-      }) + ' ' + expenseDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
       });
       html += `<li id="expense-${expense.id}" class="border-t m-4 py-4">
         <div class="text-lg">${expense.description} <strong class="float-right">$${expense.amount}</strong></div>
