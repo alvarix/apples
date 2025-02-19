@@ -22,9 +22,8 @@
   <link rel="manifest" href="/favicon/site.webmanifest" />
 </head>
 <body>
-
-
-  <h1></h1>
+<main>
+  <h1 clas="mt-32"></h1>
   <form 
     class="text-lg"
     id="x"
@@ -57,38 +56,39 @@
     <span style="font-weight: normal;" id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span>
   </h2>
   <div id="expenses" hx-get="/api/expenses" hx-trigger="load"></div>
+</main>
 
-  <aside>
-    <h3>About</h3>
-    <p>
-      This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
-      <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
-    </p>
-    <p>It uses HTMX and Alpine for the frontend and Fastify and Postgres for the backend.</p>
+<aside>
+  <h3>About</h3>
+  <p>
+    This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
+    <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
+  </p>
+  <p>It uses HTMX and Alpine for the frontend and Fastify and Postgres for the backend.</p>
 
-    <hr>
-    <h4 class="mt24">To do:</h4>
-    <!-- Persistent Todo App using Alpine.js -->
-    <div x-data="todoApp()" x-init="fetchTodos()">
-      <form @submit.prevent="addTodo" class="mb-4">
-        <input type="text" x-model="newTodo" placeholder="New task" class="p-2" />
-        <button type="submit" class="p-2  ml-2">Add</button>
-      </form>
-      <ul>
-        <template x-for="(todo, index) in todos" :key="todo.id">
-          <li class="flex items-center justify-between mb-2">
-            <div class="flex items-center">
-              <input type="checkbox" :checked="todo.done" @change="toggleTodo(index)" class="mr-2" />
-              <span x-text="todo.text" :class="{ 'line-through': todo.done }"></span>
-                
-                <button @click="removeTodo(index)" class="text-red-500 hover:text-red-700 delete">
-                    x
-                </button>
-            </div>
-          </li>
-        </template>
-      </ul>
-    </div>
-  </aside>
+  <hr>
+  <h4 class="mt24">To do:</h4>
+  <!-- Persistent Todo App using Alpine.js -->
+  <div x-data="todoApp()" x-init="fetchTodos()">
+    <form @submit.prevent="addTodo" class="mb-4">
+      <input type="text" x-model="newTodo" placeholder="New task" class="p-2" />
+      <button type="submit" class="p-2  ml-2">Add</button>
+    </form>
+    <ul>
+      <template x-for="(todo, index) in todos" :key="todo.id">
+        <li class="flex items-center justify-between mb-2">
+          <div class="flex items-center">
+            <input type="checkbox" :checked="todo.done" @change="toggleTodo(index)" class="mr-2" />
+            <span x-text="todo.text" :class="{ 'line-through': todo.done }"></span>
+              
+              <button @click="removeTodo(index)" class="text-red-500 hover:text-red-700 delete">
+                  x
+              </button>
+          </div>
+        </li>
+      </template>
+    </ul>
+  </div>
+</aside>
 </body>
 </html>

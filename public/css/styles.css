@@ -41,6 +41,15 @@ button {
     max-width: 500px;
 }
 
+main, aside {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+
+main {
+    margin: 100px auto;
+}
 aside {
     border-radius: 24px;
     background-color: #eee;
