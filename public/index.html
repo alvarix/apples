@@ -22,10 +22,19 @@
   <link rel="manifest" href="/favicon/site.webmanifest" />
 </head>
 <body>
-<main>
+<main class="overflow-visible">
   <h1 clas="mt-32"> <span class="text-2xl font-bold text-red-500">apples</span></h1>
+  <aside class="my-0">
+  <p>
+      This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
+      <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
+    <span class="text-red-500">Please dont modify!</span>
+    It's a simple app that allows us to add expenses and see the balance between us.
+    <p class="mt-2">It uses HTMX and Alpine for the frontend, Fastify and Postgres for the backend.</p>
+  </aside>
+
   <form 
-    class="text-lg"
+    class="textlxl md:text-2xl"
     id="x"
     hx-post="/api/add-expense" 
     hx-trigger="submit" 
@@ -58,17 +67,7 @@
 </main>
 
 <aside class="prose">
-  <h3 class="font-bold" >About</h3>
-  <p>
-    This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
-    <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
-  </p>
-  <p class="text-red-500">Please dont modify!</p>
-  <p>It's a simple app that allows us to add expenses and see the balance between us.</p>
-  <p class="mt-8">It uses HTMX and Alpine for the frontend, Fastify and Postgres for the backend.</p>
-
-  <hr>
-  <h3 class="mt-8 mb-2 font-bold">Road map</h3>
+  <h3 class="my-2 font-bold">Road map</h3>
   <!-- Persistent Todo App using Alpine.js -->
   <div x-data="todoApp()" x-init="fetchTodos()">
     <form @submit.prevent="addTodo" class="mb-4">

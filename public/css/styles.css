@@ -48,16 +48,18 @@ main, aside {
 
 @media (min-width: 768px) {
     main {
-        margin: 100px auto;
+        margin: 40px auto;
     }
 }
 
 aside {
     border-radius: 24px;
     background-color: #eee;
-    padding: 24px;
-    margin-top: 100px;
+    padding: 10px 18px;
+    width: 700px;
+    font-size: 13px;
 }
+
 .line-through {
     text-decoration: line-through;
 }
