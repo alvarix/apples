@@ -90,7 +90,8 @@ function generateExpenseHtml(rows) {
       </li>`;
     });
     html += '</ul>';
-    html += `<p class="mt-2 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
+    html += '<hr/>';
+    html += `<p class="mt-2 mb-24 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
   }
   return html;
 }

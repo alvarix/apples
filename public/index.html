@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Apples!</title>
+  <title>Apples</title>
    <!-- Alpine component for the persistent todo app -->
   <script src="/js/todo.js" defer></script> 
   <!-- HTMX for AJAX requests -->
@@ -51,8 +51,7 @@
         <button type="submit">Add Expense</button>
     </div>
   </form>
-  <h2 class="mt-24">
-    Balance:
+  <h2 class="my-24">
     <span style="font-weight: normal;" id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span>
   </h2>
   <div id="expenses" hx-get="/api/expenses" hx-trigger="load"></div>
@@ -64,12 +63,12 @@
     This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
     <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
   </p>
-  <p>Please dont modify!</p>
+  <p class="text-red-500">Please dont modify!</p>
   <p>It's a simple app that allows us to add expenses and see the balance between us.</p>
   <p class="mt-8">It uses HTMX and Alpine for the frontend, Fastify and Postgres for the backend.</p>
 
   <hr>
-  <h4 class="my24">To do:</h4>
+  <h3 class="mt-8 mb-2 font-bold">Road map</h3>
   <!-- Persistent Todo App using Alpine.js -->
   <div x-data="todoApp()" x-init="fetchTodos()">
     <form @submit.prevent="addTodo" class="mb-4">
