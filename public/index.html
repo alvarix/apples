@@ -58,16 +58,18 @@
   <div id="expenses" hx-get="/api/expenses" hx-trigger="load"></div>
 </main>
 
-<aside>
-  <h3>About</h3>
+<aside class="prose">
+  <h3 class="font-bold" >About</h3>
   <p>
     This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
     <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
   </p>
-  <p>It uses HTMX and Alpine for the frontend and Fastify and Postgres for the backend.</p>
+  <p>Please dont modify!</p>
+  <p>It's a simple app that allows us to add expenses and see the balance between us.</p>
+  <p class="mt-8">It uses HTMX and Alpine for the frontend, Fastify and Postgres for the backend.</p>
 
   <hr>
-  <h4 class="mt24">To do:</h4>
+  <h4 class="my24">To do:</h4>
   <!-- Persistent Todo App using Alpine.js -->
   <div x-data="todoApp()" x-init="fetchTodos()">
     <form @submit.prevent="addTodo" class="mb-4">

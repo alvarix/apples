@@ -43,13 +43,15 @@ button {
 
 main, aside {
     max-width: 500px;
-    margin: 0 auto;
+    margin: 20px auto;
 }
 
-
-main {
-    margin: 100px auto;
+@media (min-width: 768px) {
+    main {
+        margin: 100px auto;
+    }
 }
+
 aside {
     border-radius: 24px;
     background-color: #eee;
