@@ -26,17 +26,11 @@
   <div class="flex justify-between items-center">
 
     <h1 clas="mt-32"> <span class="text-2xl font-bold text-red-500">apples</span></h1>
-    <button id="btn-pop-1" popovertarget="popover">About</button>
-    <div id="popover" popover="manual">
-      <aside class="my-0">
-        <p>
-          This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
-          <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
-          <span class="text-red-500">Please dont modify!</span>
-          It's a simple app that allows us to add expenses and see the balance between us.
-          <p class="mt-2">It uses HTMX and Alpine for the frontend, Fastify and Postgres for the backend.</p>
-        </aside>
-      </div>
+    <div class="flex flex-col">
+      <button id="btn-pop-1" class='btn-sm' popovertarget="popover">About</button>
+      <button id="btn-pop-2" class="btn-sm" onclick="document.querySelector('dialog').showModal()">Todo</button>
+    </div>
+
     </div>
 
   <form 
@@ -72,6 +66,13 @@
   <div id="expenses" class='flex-col md:flex-row gap-8 flex' hx-get="/api/expenses" hx-trigger="load"></div>
 </main>
 
+
+
+
+<dialog id="popover2" popover="manual">
+  <form method="dialog">
+  <button class="btn-sm">Close</button>
+  </form>
 <aside class="prose">
   <h3 class="my-2 font-bold">Road map</h3>
   <!-- Persistent Todo App using Alpine.js -->
@@ -94,7 +95,23 @@
         </li>
       </template>
     </ul>
-  </div>
+  </dialog>
 </aside>
+</div>
+
+
+
+<div id="popover" popover="manual">
+  <aside class="my-0">
+    <p>
+      This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
+      <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
+      <span class="text-red-500">Please dont modify!</span>
+      It's a simple app that allows us to add expenses and see the balance between us.
+      <p class="mt-2">It uses HTMX and Alpine for the frontend, Fastify and Postgres for the backend.</p>
+    </aside>
+  </div>
+
+
 </body>
 </html>

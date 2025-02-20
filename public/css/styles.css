@@ -87,7 +87,7 @@ input {
     border-radius: 5px;
 }
 
-[popover] {
+#popover {
     margin: 0;
     padding: 0;
     border: 0;
@@ -103,8 +103,25 @@ input {
     }
   }
 
+[popover], dialog {
+    background-color: transparent;
+}
+
+
+#popover2 {
+    height: 100vh;
+}
+
   #btn-pop-1 {
     anchor-name: --anchor_1;
+  }
+
+  #btn-pop-2 {
+    anchor-name: --anchor_2;
+  }
+
+
+.btn-sm {
     height: fit-content;
     text-transform: uppercase;
     font-weight: bold;
