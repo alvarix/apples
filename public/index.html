@@ -69,7 +69,7 @@
   <h2 class="my-24">
     <span style="font-weight: normal;" id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span>
   </h2>
-  <div id="expenses" hx-get="/api/expenses" hx-trigger="load"></div>
+  <div id="expenses" class='flex-col md:flex-row gap-8 flex' hx-get="/api/expenses" hx-trigger="load"></div>
 </main>
 
 <aside class="prose">

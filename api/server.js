@@ -67,7 +67,7 @@ function generateExpenseHtml(rows) {
   for (const payer in groupedExpenses) {
     const expenses = groupedExpenses[payer];
     const total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
-    html += `<h2 class="text-xl font-bold mt-4">${payer}</h2>`;
+    html += `<div class='flex-1'><h2 class="text-xl font-bold mt-4">${payer}</h2>`;
     html += '<ul>';
     expenses.forEach(expense => {
       const expenseDate = new Date(expense.date);
@@ -91,7 +91,7 @@ function generateExpenseHtml(rows) {
     });
     html += '</ul>';
     html += '<hr/>';
-    html += `<p class="mt-2 mb-24 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p>`;
+    html += `<p class="mt-2 mb-24 font-semibold">Total for ${payer}: $${total.toFixed(2)}</p></div>`;
   }
   return html;
 }
