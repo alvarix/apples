@@ -23,15 +23,21 @@
 </head>
 <body>
 <main class="overflow-visible">
-  <h1 clas="mt-32"> <span class="text-2xl font-bold text-red-500">apples</span></h1>
-  <aside class="my-0">
-  <p>
-      This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
-      <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
-    <span class="text-red-500">Please dont modify!</span>
-    It's a simple app that allows us to add expenses and see the balance between us.
-    <p class="mt-2">It uses HTMX and Alpine for the frontend, Fastify and Postgres for the backend.</p>
-  </aside>
+  <div class="flex justify-between items-center">
+
+    <h1 clas="mt-32"> <span class="text-2xl font-bold text-red-500">apples</span></h1>
+    <button id="btn-pop-1" popovertarget="popover">About</button>
+    <div id="popover" popover="manual">
+      <aside class="my-0">
+        <p>
+          This app was built by <a target="_blank" href="https://github.com/alvarix">Alvar</a> as a mini expense tracker for him and
+          <a target="_blank" href="https://noelletimmons.com/">Noelle</a>.
+          <span class="text-red-500">Please dont modify!</span>
+          It's a simple app that allows us to add expenses and see the balance between us.
+          <p class="mt-2">It uses HTMX and Alpine for the frontend, Fastify and Postgres for the backend.</p>
+        </aside>
+      </div>
+    </div>
 
   <form 
     class="textlxl md:text-2xl"

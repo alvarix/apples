@@ -25,7 +25,7 @@ body {
     padding-bottom: 1rem;
 }
 
-#x button,
+button,
 #x input {
     border: 1px solid #ccc;
     padding: .25em .5em;
@@ -87,4 +87,35 @@ input {
     border-radius: 5px;
 }
 
-@tailwind utilities;  
+[popover] {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    position-anchor: --anchor_1;
+    inset-block-start: anchor(--anchor_1 top);
+    inset-inline-start: anchor(--anchor_1 left);
+    transform: translateX(-100%) translateY(-50%);
+    aside {
+        padding: 20px;
+    }
+    p {
+        font-size: 16px !important;
+    }
+  }
+
+  #btn-pop-1 {
+    anchor-name: --anchor_1;
+    height: fit-content;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 11px;
+  }
+
+
+
+
+
+
+  @tailwind utilities;  
+
+
