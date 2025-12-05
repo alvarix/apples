@@ -7,6 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "migrate": "tsx src/scripts/migrate.ts",
+    "seed": "tsx src/scripts/seed.ts",
+    "seed:clear": "tsx src/scripts/seed.ts --clear",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "typecheck": "tsc --noEmit"
