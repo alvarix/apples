@@ -3,7 +3,10 @@
     "allow": [
       "Skill(superpowers:writing-plans)",
       "Bash(ln:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(afplay:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

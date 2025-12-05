@@ -33,14 +33,14 @@
 
     </div>
 
-  <form 
+  <form
     class="textlxl md:text-2xl"
     id="x"
-    hx-post="/api/add-expense" 
-    hx-trigger="submit" 
-    hx-target="#expenses" 
+    hx-post="/api/add-expense"
+    hx-trigger="submit"
+    hx-target="#expenses"
     hx-swap="innerHTML"
-    hx-on:htmx:afterRequest="if (event.detail.success) { this.reset(); }"
+    hx-on::after-request="this.reset()"
     >
     <div>
       <label>
@@ -54,10 +54,11 @@
         <input type="text" name="description" placeholder="Description" required />
     </div>
     <div>
-        <input type="number" name="amount" placeholder="$ Amount" required />
+        <input type="number" name="amount" placeholder="$ Amount" required step="0.01" />
     </div>
-    <div>
-        <button type="submit">Add Expense</button>
+    <div class="flex gap-2">
+        <button type="submit" name="type" value="expense">Add Expense</button>
+        <button type="submit" name="type" value="settlement" class="bg-green-600 text-white">Loan/Settle</button>
     </div>
   </form>
   <h2 class="my-24">
