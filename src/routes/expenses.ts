@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import Decimal from 'decimal.js';
 import { getMonthTransactions, insertTransaction, deleteTransaction } from '../db/transactions.js';
 import { processTransactions, calculateBalance } from '../services/calculations.js';
+import { query } from '../db/connection.js';
 import type { NewTransaction } from '../types/Transaction';
 import { isValidPayer } from '../types/Payer';
 import { isValidTransactionType } from '../types/Transaction';
@@ -53,7 +54,12 @@ function generateExpenseHtml(transactions: any[], adamPaid: Decimal, evePaid: De
         month: 'long',
         day: 'numeric'
       });
-      const typeLabel = expense.type === 'settlement' ? '<span class="text-green-600">⇄ Settlement</span>' : '';
+      let typeLabel = '';
+      if (expense.type === 'loan') {
+        typeLabel = '<span class="text-blue-600">→ Loan</span>';
+      } else if (expense.type === 'settlement') {
+        typeLabel = '<span class="text-green-600">✓ Settle</span>';
+      }
       html += `<li id="expense-${expense.id}" class="border-t m-4 py-4">
         <div class="text-lg">${typeLabel} ${expense.description} <strong class="float-right">$${expense.amount}</strong></div>
         <em class="text-gray-400">${formattedDate}</em>
@@ -61,7 +67,7 @@ function generateExpenseHtml(transactions: any[], adamPaid: Decimal, evePaid: De
           hx-confirm="Delete ${expense.description}?"
           hx-delete="/api/delete-expense/${expense.id}"
           hx-target="closest li"
-          hx-swap="delete">
+          hx-swap="outerHTML">
           x
         </button>
       </li>`;
@@ -172,9 +178,45 @@ export default async function expensesRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Invalid ID' });
     }
 
+    // Get transaction details before deleting
+    const result = await query('SELECT * FROM transactions WHERE id = $1', [id]);
+    const transaction = result.rows[0];
+
+    if (!transaction) {
+      return reply.code(404).send({ error: 'Transaction not found' });
+    }
+
     await deleteTransaction(id);
 
-    return { success: true };
+    // Format the transaction details for deleted state
+    const expenseDate = new Date(transaction.date);
+    const formattedDate = expenseDate.toLocaleDateString('en-US', {
+      timeZone: 'EST',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    let typeLabel = '';
+    if (transaction.type === 'loan') {
+      typeLabel = '<span class="text-blue-600 opacity-50">→ Loan</span>';
+    } else if (transaction.type === 'settlement') {
+      typeLabel = '<span class="text-green-600 opacity-50">✓ Settle</span>';
+    }
+
+    // Return HTML that shows deleted state with original information
+    const html = `
+      <li class="border-t m-4 py-4 opacity-50">
+        <div class="text-lg text-gray-400 line-through">
+          ${typeLabel} ${transaction.description}
+          <strong class="float-right">$${transaction.amount}</strong>
+        </div>
+        <em class="text-gray-400">${formattedDate}</em>
+        <span class="ml-2 text-gray-400 float-right italic">Deleted</span>
+      </li>
+    `;
+
+    reply.type('text/html');
+    return html;
   });
 
   // GET all-time balance

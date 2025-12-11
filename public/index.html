@@ -37,29 +37,37 @@
     hx-trigger="submit"
     hx-target="#expenses"
     hx-swap="innerHTML"
-    hx-on::after-request="this.reset()"
+    x-data="{ lastPayer: localStorage.getItem('lastPayer') || 'Adam' }"
+    x-init="$watch('lastPayer', value => localStorage.setItem('lastPayer', value))"
+    @submit="document.getElementById('balance').classList.add('loading-pulse')"
+    @htmx:after-request="$event.detail.successful && ($refs.description.value = ''; $refs.amount.value = ''); htmx.trigger('body', 'balanceUpdate')"
     >
     <div>
       <label>
-        <input type="radio" name="payer" value="Adam" required/> Adam
+        <input type="radio" name="payer" value="Adam" x-model="lastPayer" required/> Adam
       </label>
       <label>
-        <input type="radio" name="payer" value="Eve" required/> Eve
+        <input type="radio" name="payer" value="Eve" x-model="lastPayer" required/> Eve
       </label>
     </div>
     <div>
-        <input type="text" name="description" placeholder="Description" required />
+        <input type="text" name="description" placeholder="Description" required x-ref="description" />
     </div>
     <div>
-        <input type="number" name="amount" placeholder="$ Amount" required step="0.01" />
+        <input type="number" name="amount" placeholder="$ Amount" required step="0.01" x-ref="amount" />
     </div>
     <div class="flex gap-2">
         <button type="submit" name="type" value="expense">Add Expense</button>
-        <button type="submit" name="type" value="settlement" class="bg-green-600 text-white">Loan/Settle</button>
+        <button type="submit" name="type" value="loan">Loan</button>
+        <button type="submit" name="type" value="settlement" class="bg-green-600 text-white">Settle</button>
     </div>
   </form>
   <h2 class="my-24">
-    <span style="font-weight: normal;" id="balance" hx-get="/api/balance" hx-trigger="load, every 5s"></span>
+    <span style="font-weight: normal;" id="balance"
+          hx-get="/api/balance"
+          hx-trigger="load, every 5s, balanceUpdate from:body"
+          class="transition-all duration-300"
+          @htmx:after-swap="this.classList.remove('loading-pulse')"></span>
   </h2>
   <div id="expenses" class='flex-col md:flex-row gap-8 flex flex-wrap' hx-get="/api/expenses" hx-trigger="load"></div>
 </main>

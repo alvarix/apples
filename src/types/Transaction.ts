@@ -1,6 +1,6 @@
 import type { Payer } from "./Payer";
 
-export type TransactionType = "expense" | "settlement";
+export type TransactionType = "expense" | "loan" | "settlement";
 
 export interface Transaction {
   id: number;
@@ -22,5 +22,5 @@ export interface NewTransaction {
 export function isValidTransactionType(
   value: unknown,
 ): value is TransactionType {
-  return value === "expense" || value === "settlement";
+  return value === "expense" || value === "loan" || value === "settlement";
 }

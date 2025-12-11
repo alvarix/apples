@@ -133,6 +133,20 @@ input {
 
 
 
+  /* Fast pulse animation for loading state */
+  @keyframes fast-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .loading-pulse {
+    animation: fast-pulse 0.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
   @tailwind utilities;  
 
 

@@ -58,8 +58,8 @@ export function processTransactions(transactions: Transaction[]): {
       } else {
         evePaid = evePaid.plus(amount);
       }
-    } else if (transaction.type === 'settlement') {
-      // Settlement: one person paid the other back
+    } else if (transaction.type === 'loan' || transaction.type === 'settlement') {
+      // Loan/Settlement: one person paid the other back
       // This counts as if the receiver paid less, and the payer paid more
       // Example: Adam paid $100, Eve settles $50 to Adam
       //   - Adam gets reimbursed $50, so his net is $50
